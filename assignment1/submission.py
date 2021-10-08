@@ -333,6 +333,7 @@ def betterEvaluationFunction(currentGameState):
   wall = currentGameState.getWalls()
   maxDistance = wall.width + wall.height - 4
   pacmanPos = currentGameState.getPacmanPosition()
+  numAgents = currentGameState.getNumAgents()
 
   def getDistances(positions):
       return [manhattanDistance(pacmanPos, pos) for pos in positions]
@@ -344,16 +345,18 @@ def betterEvaluationFunction(currentGameState):
     scaredDistance = []
     normalDistance = []
     additional = 0
+    countScared = 0
     for i, scaredTime in enumerate(scaredTimes):
       if scaredTime:
         if distances[i] <= 3:
           additional += 250 / (distances[i] + 1)
         scaredDistance.append(distances[i])
+        countScared += 1
       else:
-        if distances[i] <= 3:
+        if distances[i] <= 2:
           additional -= 250 / (distances[i] + 1)
         scaredDistance.append(maxDistance)
-    return additional
+    return additional - (numAgents - countScared) * 10
     # return 1 / sum(scaredDistance) + additional
 
   def foodFeature():
