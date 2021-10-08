@@ -324,7 +324,56 @@ def betterEvaluationFunction(currentGameState):
   """
 
   # BEGIN_YOUR_ANSWER (our solution is 60 lines of code, but don't worry if you deviate from this)
-  raise NotImplementedError  # remove this line before writing code
+
+  # distance from ghost - far is better.
+  # food count - less is better. reciprocal.
+  # distance from food - less is better. reciprocal
+  # capsule - less is better. reciprocal
+
+  wall = currentGameState.getWalls()
+  maxDistance = wall.width + wall.height - 4
+  pacmanPos = currentGameState.getPacmanPosition()
+
+  def getDistances(positions):
+      return [manhattanDistance(pacmanPos, pos) for pos in positions]
+
+  def ghostFeature():
+    scaredTimes = [ghostState.scaredTimer for ghostState in currentGameState.getGhostStates()]
+    distances = getDistances(currentGameState.getGhostPositions())
+
+    scaredDistance = []
+    normalDistance = []
+    additional = 0
+    for i, scaredTime in enumerate(scaredTimes):
+      if scaredTime:
+        if distances[i] <= 3:
+          additional += 250 / (distances[i] + 1)
+        scaredDistance.append(distances[i])
+      else:
+        if distances[i] <= 3:
+          additional -= 250 / (distances[i] + 1)
+        scaredDistance.append(maxDistance)
+    return additional
+    # return 1 / sum(scaredDistance) + additional
+
+  def foodFeature():
+    foods = currentGameState.getFood().asList()
+    distances = getDistances(foods)
+    return 150 / (sum(distances) + 1) - len(foods) * 10
+
+  def capsuleFeature():
+    capsules = currentGameState.getCapsules()
+    distances = getDistances(capsules)
+    scaredTimes = [ghostState.scaredTimer for ghostState in currentGameState.getGhostStates()]
+    if sum(scaredTimes) or len(distances) == 0:
+      return 0
+    else:
+      return 100 / (sum(distances) + 1) - len(capsules) * 200
+
+  curScore = currentGameState.getScore()
+  # print(curScore, ghostFeature(), foodFeature(), capsuleFeature())
+  return curScore + ghostFeature() + foodFeature() + capsuleFeature()
+
   # END_YOUR_ANSWER
 
 # Abbreviation
