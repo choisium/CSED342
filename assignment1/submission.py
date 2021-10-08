@@ -279,7 +279,40 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
 
     # BEGIN_YOUR_ANSWER (our solution is 30 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+
+    numAgents = gameState.getNumAgents()
+
+    def inspectDepth(depth, currentState, agentIndex):
+      if depth == self.depth or currentState.isWin() or currentState.isLose():
+        return (self.evaluationFunction(currentState), Directions.STOP)
+
+      bestScore = float('-inf') if agentIndex == 0 else float('inf')
+      expScore = 0
+      bestMove = Directions.STOP
+
+      legalMoves = currentState.getLegalActions(agentIndex)
+      # print(depth, agentIndex, legalMoves)
+      for legalMove in legalMoves:
+        nextState = currentState.generateSuccessor(agentIndex, legalMove)
+        (score, move) = inspectDepth(depth + (agentIndex + 1) // numAgents, nextState, (agentIndex + 1) % numAgents)
+
+        if agentIndex == 0:
+          # print("\ttrial!", agentIndex, score, bestScore)
+          if score > bestScore:
+            bestScore = score
+            bestMove = legalMove
+        else:
+          expScore += score / len(legalMoves)
+          # print("\ttrial 2!", depth, legalMove, agentIndex, score, expScore, len(legalMoves))
+
+      return (bestScore, bestMove) if agentIndex == 0 else (expScore, bestMove)
+
+    nextScore, nextMove = inspectDepth(0, gameState, 0)
+
+    # print(nextScore, nextMove, "is the max score!")
+
+    return nextMove
+
     # END_YOUR_ANSWER
 
 ######################################################################################
