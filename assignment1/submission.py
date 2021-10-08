@@ -1,8 +1,8 @@
 ## ID: 20160169 NAME: Choi Soomin
 ######################################################################################
 # Problem 2a
-# minimax value of the root node: 100
-# pruned edges: a, b, c
+# minimax value of the root node: 6
+# pruned edges: f, i, p
 ######################################################################################
 
 from util import manhattanDistance
