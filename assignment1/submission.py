@@ -222,7 +222,44 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
 
     # BEGIN_YOUR_ANSWER (our solution is 42 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+
+    numAgents = gameState.getNumAgents()
+
+    def inspectDepth(depth, currentState, agentIndex, alpha, beta):
+      if depth == self.depth or currentState.isWin() or currentState.isLose():
+        return (self.evaluationFunction(currentState), Directions.STOP)
+
+      bestScore = alpha if agentIndex == 0 else beta
+      bestMove = Directions.STOP
+
+      legalMoves = currentState.getLegalActions(agentIndex)
+      # print(depth, agentIndex, legalMoves)
+      for legalMove in legalMoves:
+        nextState = currentState.generateSuccessor(agentIndex, legalMove)
+        (score, move) = inspectDepth(depth + (agentIndex + 1) // numAgents, nextState, (agentIndex + 1) % numAgents, alpha, beta)
+
+        if agentIndex == 0:
+          # print("\ttrial!", agentIndex, score, bestScore)
+          if score > bestScore:
+            bestScore = score
+            alpha = score
+            bestMove = legalMove
+          if score >= beta: break
+        else:
+          # print("\ttrial 2!", agentIndex, score, bestScore)
+          if score < bestScore:
+            bestScore = score
+            beta = score
+            bestMove = bestMove
+          if score <= alpha: break
+
+      return (bestScore, bestMove)
+
+    nextScore, nextMove = inspectDepth(0, gameState, 0, float('-inf'), float('inf'))
+    # print(nextScore, nextMove, "is the max score!")
+
+    return nextMove
+
     # END_YOUR_ANSWER
 
 ######################################################################################
