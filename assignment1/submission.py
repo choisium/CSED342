@@ -1,4 +1,4 @@
-## ID: 20212656 NAME: Hwang Seonjeong
+## ID: 20160169 NAME: Choi Soomin
 ######################################################################################
 # Problem 2a
 # minimax value of the root node: 100
