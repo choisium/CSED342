@@ -348,14 +348,14 @@ def betterEvaluationFunction(currentGameState):
     countScared = 0
     for i, scaredTime in enumerate(scaredTimes):
       if scaredTime:
-        if distances[i] <= 3:
-          additional += 300 / (distances[i] + 1)
+        # if distances[i] <= 5:
+        additional += 300 / (distances[i] + 1)
         if minScaredDistance > distances[i]:
           minScaredDistance = distances[i]
         countScared += 1
       else:
-        if distances[i] <= 2:
-          additional -= 250 / (distances[i] + 1)
+        if distances[i] < 2:
+          additional -= 300 / (distances[i] + 1)
         if minGhostDistance > distances[i]:
           minGhostDistance = distances[i]
     return additional + (numAgents - countScared) * 100 + 10 / minScaredDistance - 10 / minGhostDistance
