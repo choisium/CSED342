@@ -342,27 +342,29 @@ def betterEvaluationFunction(currentGameState):
     scaredTimes = [ghostState.scaredTimer for ghostState in currentGameState.getGhostStates()]
     distances = getDistances(currentGameState.getGhostPositions())
 
-    scaredDistance = []
-    normalDistance = []
+    minScaredDistance = float('inf')
+    minGhostDistance = float('-inf')
     additional = 0
     countScared = 0
     for i, scaredTime in enumerate(scaredTimes):
       if scaredTime:
         if distances[i] <= 3:
-          additional += 250 / (distances[i] + 1)
-        scaredDistance.append(distances[i])
+          additional += 300 / (distances[i] + 1)
+        if minScaredDistance > distances[i]:
+          minScaredDistance = distances[i]
         countScared += 1
       else:
         if distances[i] <= 2:
           additional -= 250 / (distances[i] + 1)
-        scaredDistance.append(maxDistance)
-    return additional - (numAgents - countScared) * 10
-    # return 1 / sum(scaredDistance) + additional
+        if minGhostDistance > distances[i]:
+          minGhostDistance = distances[i]
+    return additional + (numAgents - countScared) * 100 + 10 / minScaredDistance - 10 / minGhostDistance
 
   def foodFeature():
     foods = currentGameState.getFood().asList()
     distances = getDistances(foods)
-    return 150 / (sum(distances) + 1) - len(foods) * 10
+    minDistance = min(distances) if len(distances) > 0 else maxDistance
+    return 180 / (sum(distances) + 1) - len(foods) * 10
 
   def capsuleFeature():
     capsules = currentGameState.getCapsules()
@@ -371,7 +373,7 @@ def betterEvaluationFunction(currentGameState):
     if sum(scaredTimes) or len(distances) == 0:
       return 0
     else:
-      return 100 / (sum(distances) + 1) - len(capsules) * 200
+      return 100 / (sum(distances) + 1) - len(capsules) * 300
 
   curScore = currentGameState.getScore()
   # print(curScore, ghostFeature(), foodFeature(), capsuleFeature())
