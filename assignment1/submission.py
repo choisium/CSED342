@@ -2,7 +2,7 @@
 ######################################################################################
 # Problem 2a
 # minimax value of the root node: 6
-# pruned edges: f, i, p
+# pruned edges: h, m, x
 ######################################################################################
 
 from util import manhattanDistance
