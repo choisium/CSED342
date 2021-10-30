@@ -19,7 +19,38 @@ def get_conditional_prob1(delta, epsilon, eta, c2, d2):
     """
     # Problem 1a
     # BEGIN_YOUR_ANSWER (our solution is 14 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+
+    # P(c2|d2) \prop P(d2|c2)P(c2)
+    # P(c2) = Sum_c1 Sum_c1 P(c2|c1)P(c1)
+
+    def get_p_c1(c1):
+        return delta if c1 == 0 else 1 - delta
+
+    def get_p_c2_bar_c1(c1, c2):
+        return 1 - epsilon if c1 == c2 else epsilon
+
+    def get_p_c2(c2):
+        sum = 0
+        for c1 in [0, 1]:
+            sum += get_p_c2_bar_c1(c1, c2) * get_p_c1(c1)
+        return sum
+
+    def get_p_d2_bar_c2(d2, c2):
+        return 1 - eta if d2 == c2 else eta
+
+    def get_c2_bar_d2(c2, d2):
+        p_c2 = get_p_c2(c2)
+        p_d_bar_c2 = get_p_d2_bar_c2(d2, c2)
+        return p_c2 * p_d_bar_c2
+
+    def normalization(p_c2_bar_d2, d2):
+        sum = 0
+        for c2 in [0, 1]:
+            sum += get_c2_bar_d2(c2, d2)
+        return p_c2_bar_d2 / sum
+
+    return normalization(get_c2_bar_d2(c2, d2), d2)
+
     # END_YOUR_ANSWER
 
 
@@ -36,7 +67,34 @@ def get_conditional_prob2(delta, epsilon, eta, c2, d2, d3):
     """
     # Problem 1b
     # BEGIN_YOUR_ANSWER (our solution is 17 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+
+    # P(c2|d2,d3) = P(c2,d3|d2) / P(d3|d2) \prop P(d3|c2,d2) P(c2|d2) = P(d3|c2)P(c2|d2)
+    # P(d3|c2) = Sum_c3 P(d3,c3|c2) = Sum_c3 P(d3|c3,c2)P(c3|c2) = Sum_c3 P(d3|c3)P(c3|c2)
+
+    def get_p_c3_bar_c2(c2, c3):
+        return 1 - epsilon if c2 == c3 else epsilon
+
+    def get_p_d3_bar_c3(d3, c3):
+        return 1 - eta if d3 == c3 else eta
+
+    def get_p_d3_bar_c2(d3, c2):
+        sum = 0
+        for c3 in [0, 1]:
+            sum += get_p_d3_bar_c3(d3, c3) * get_p_c3_bar_c2(c2, c3)
+        return sum
+
+    def get_p_c2_bar_d2_d3(c2, d2, d3):
+        p_c2_bar_d2 = get_conditional_prob1(delta, epsilon, eta, c2, d2)
+        return get_p_d3_bar_c2(d3, c2) * p_c2_bar_d2
+
+    def normalization(p_c2_bar_d2_d3, d2, d3):
+        sum = 0
+        for c2 in [0, 1]:
+            sum += get_p_c2_bar_d2_d3(c2, d2, d3)
+        return p_c2_bar_d2_d3 / sum
+
+    return normalization(get_p_c2_bar_d2_d3(c2, d2, d3), d2, d3)
+
     # END_YOUR_ANSWER
 
 
@@ -47,7 +105,19 @@ def get_epsilon():
     """
     # Problem 1c
     # BEGIN_YOUR_ANSWER (our solution is 1 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+
+    # to check!
+    # delta = 0.1
+    # epsilon = 0.5
+    # eta = 0.6
+    # c2 = 0
+    # d2 = 0
+    # d3 = 3
+    # p_c2_bar_d2 = get_conditional_prob1(delta, epsilon, eta, c2, d2)
+    # p_c2_bar_d2_d3 = get_conditional_prob2(delta, epsilon, eta, c2, d2, d3)
+    # print(p_c2_bar_d2, p_c2_bar_d2_d3, p_c2_bar_d2 == p_c2_bar_d2_d3)
+
+    return 0.5
     # END_YOUR_ANSWER
 
 
@@ -90,7 +160,18 @@ class ExactInference(object):
 
     def observe(self, agentX, agentY, observedDist):
         # BEGIN_YOUR_ANSWER (our solution is 9 lines of code, but don't worry if you deviate from this)
-        raise NotImplementedError  # remove this line before writing code
+
+        for i in range(self.belief.getNumRows()):
+            for j in range(self.belief.getNumCols()):
+                tileX = util.colToX(j)
+                tileY = util.rowToY(i)
+                dist = math.sqrt((agentX - tileX) ** 2 + (agentY - tileY) ** 2)
+                emission = util.pdf(dist, Const.SONAR_STD, observedDist)
+                posterior = self.belief.getProb(i, j)
+                self.belief.setProb(i, j, posterior * emission)
+
+        self.belief.normalize()
+
         # END_YOUR_ANSWER
 
     ############################################################
@@ -114,7 +195,15 @@ class ExactInference(object):
         if self.skipElapse:
             return  ### ONLY FOR THE GRADER TO USE IN Problem 2
         # BEGIN_YOUR_ANSWER (our solution is 8 lines of code, but don't worry if you deviate from this)
-        raise NotImplementedError  # remove this line before writing code
+
+        new_belief = util.Belief(self.belief.numRows, self.belief.numCols, 0.0)
+        for ((oldTile, newTile), transProb) in self.transProb.items():
+            posterior = self.belief.getProb(*oldTile)
+            new_belief.addProb(*newTile, posterior * transProb)
+
+        new_belief.normalize()
+        self.belief = new_belief
+
         # END_YOUR_ANSWER
 
     # Function: Get Belief
@@ -201,7 +290,21 @@ class ParticleFilter(object):
     ############################################################
     def observe(self, agentX, agentY, observedDist):
         # BEGIN_YOUR_ANSWER (our solution is 12 lines of code, but don't worry if you deviate from this)
-        raise NotImplementedError  # remove this line before writing code
+
+        for (tile, count) in self.particles.items():
+            tileX = util.colToX(tile[1])
+            tileY = util.rowToY(tile[0])
+            dist = math.sqrt((agentX - tileX) ** 2 + (agentY - tileY) ** 2)
+            emission = util.pdf(dist, Const.SONAR_STD, observedDist)
+            self.particles[tile] = count * emission
+
+        new_particles = collections.defaultdict(int)
+        for _ in range(self.NUM_PARTICLES):
+            particleIndex = util.weightedRandomChoice(self.particles)
+            new_particles[particleIndex] += 1
+
+        self.particles = new_particles
+
         # END_YOUR_ANSWER
         self.updateBelief()
 
@@ -227,7 +330,16 @@ class ParticleFilter(object):
     ############################################################
     def elapseTime(self):
         # BEGIN_YOUR_ANSWER (our solution is 7 lines of code, but don't worry if you deviate from this)
-        raise NotImplementedError  # remove this line before writing code
+
+        new_particles = collections.defaultdict(int)
+        for (tile, count) in self.particles.items():
+            if count == 0: continue
+            for _ in range(count):
+                particleIndex = util.weightedRandomChoice(self.transProbDict[tile])
+                new_particles[particleIndex] += 1
+
+        self.particles = new_particles
+
         # END_YOUR_ANSWER
 
     # Function: Get Belief
