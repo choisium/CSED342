@@ -22,7 +22,53 @@ def problem_1a():
         pretty, good, bad, plot, not, scenery
     """
     # BEGIN_YOUR_ANSWER (our solution is 1 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+
+    reviews = [
+        {"occurrence": {"pretty": 1, "good": 1}, "label": 1},
+        {"occurrence": {"bad": 1, "plot": 1}, "label": -1},
+        {"occurrence": {"not": 1, "good": 1}, "label": -1},
+        {"occurrence": {"pretty": 1, "scenery": 1}, "label": 1}
+    ]
+
+    weight = {"pretty": 0, "good": 0, "bad": 0, "plot": 0, "not": 0, "scenery": 0}
+
+    def iterate(review, weight):
+        sum = 0
+
+        occurrence = review["occurrence"]
+        label = review["label"]
+
+        new_weight = dict()
+        for (key, w) in weight.items():
+            if key in occurrence:
+                sum += w * occurrence[key]
+                new_weight[key] = w + label * occurrence[key]
+            else:
+                new_weight[key] = w
+
+        loss = max(0, 1 - sum * label)
+        if loss == 0:
+            new_weight = weight
+        
+        return (loss, new_weight)
+    
+    converge = False
+    
+    while not converge:
+        for review in reviews:
+            (loss, new_weight) = iterate(review, weight)
+            if new_weight == weight:
+                converge = True
+            else:
+                weight = new_weight
+
+    # print("final weight:", weight)
+    # for review in reviews:
+    #     (loss, new_weight) = iterate(review, weight)
+    #     print("\treview:", review, "loss:", loss)
+
+    return weight
+
     # END_YOUR_ANSWER
 
 
@@ -43,7 +89,9 @@ def extractWordFeatures(x):
     Example: "I am what I am" --> {'I': 2, 'am': 2, 'what': 1}
     """
     # BEGIN_YOUR_ANSWER (our solution is 6 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+    
+    return dict(Counter(x.split()))
+
     # END_YOUR_ANSWER
 
 
@@ -73,7 +121,47 @@ def learnPredictor(trainExamples, testExamples, featureExtractor, numIters, eta)
         return 1 / (1 + math.exp(-n))
 
     # BEGIN_YOUR_ANSWER (our solution is 14 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+
+    # Loss = -log(p)
+    # grad(Loss(x, y, w)) = (dLoss/dp) * (dp/dw)
+    # dLoss/dp = -1/p
+    # dp/dw = pi * dsigmoid(w * pi) if y = 1, -pi * dsigmoid(w * pi) if y = -1
+    # dsigmoid = e^(-z)/(1+e^(-z))^2 = sigmoid * (1 - sigmoid)
+
+    def get_p(weights, feature, label):
+        s = sigmoid(dotProduct(weights, feature))
+        return s if label == 1 else 1 - s
+    
+    def get_loss(weights, feature, label):
+        return - math.log(get_p(weights, feature, label))
+
+    def d_sigmoid(n):
+        s = sigmoid(n)
+        return s * (1 - s)
+
+    def get_gradient(weights, feature, label):
+        p = get_p(weights, feature, label)
+        wf = dotProduct(weights, feature)
+        dloss_dp = -1/p if label > 0 else 1/p
+        return {word: dloss_dp * occur * d_sigmoid(wf) for (word, occur) in feature.items()}
+
+    for i in range(numIters):
+        for (data, label) in trainExamples:
+            feature = featureExtractor(data)
+            loss = get_loss(weights, feature, label)
+            gradient = get_gradient(weights, feature, label)
+            for (word, grad) in gradient.items():
+                weights[word] = weights.get(word, 0) - eta * grad
+
+            # trainError = evaluatePredictor(
+            #     trainExamples,
+            #     lambda x: (1 if dotProduct(featureExtractor(x), weights) >= 0 else -1),
+            # )
+            # testError = evaluatePredictor(
+            #     testExamples, lambda x: (1 if dotProduct(featureExtractor(x), weights) >= 0 else -1)
+            # )
+            # print("loss:", loss, "train error:", trainError, "test error:", testError)
+
     # END_YOUR_ANSWER
     return weights
 
@@ -91,6 +179,17 @@ def extractBigramFeatures(x):
     {('am', 'what'): 1, 'what': 1, ('I', 'am'): 2, 'I': 2, ('what', 'I'): 1, 'am': 2, ('<s>', 'I'): 1, ('am', '</s>'): 1}
     """
     # BEGIN_YOUR_ANSWER (our solution is 5 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+
+    phi = dict()
+    splited_x = x.split()
+    last_word = "<s>"
+    for word in splited_x:
+        phi[word] = phi.get(word, 0) + 1
+        bigram = (last_word, word)
+        phi[(last_word, word)] = phi.get(bigram, 0) + 1
+        last_word = word
+        if (word == splited_x[-1]):
+            phi[(word, "</s>")] = 1
+
     # END_YOUR_ANSWER
     return phi
