@@ -1,3 +1,6 @@
+# ID: 20160169 NAME: Choi Soomin
+######################################################################################
+
 import os
 import math
 from utils import converged, plot_2d, plot_centroids, read_data, \
