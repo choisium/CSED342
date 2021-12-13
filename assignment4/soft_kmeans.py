@@ -26,7 +26,13 @@ def get_responsibility(data_point, centroids, beta):
     Returns: a dictionary whose keys are the the centroids' key names and
              value is a float as the responsibility of the cluster for the data point.
     """
-    pass
+    responsibility = dict()
+    sum = 0
+    for (name, centroid) in centroids.items():
+        exp = math.exp(-beta * euclidean_distance(data_point, centroid))
+        responsibility[name] = exp
+        sum += exp
+    return {name: res / sum for (name, res) in responsibility.items()}
 
 
 # problem for students
@@ -45,7 +51,7 @@ def update_soft_assignment(data, centroids, beta):
              (In python, 'list' cannot be the 'key' of 'dict')
              
     """
-    pass
+    return {tuple(point): get_responsibility(point, centroids, beta) for point in data}
             
 
 # problem for students
@@ -59,7 +65,23 @@ def update_centroids(soft_assignment_dict):
 
     Returns: A new dictionary representing the updated centroids
     """
-    pass
+    def list_mul(l, m):
+        return [item * m for item in l]
+
+    def list_add(l1, l2):
+        return [a + b for (a, b) in zip(l1, l2)]
+
+    centroids = {}
+    for (point, responsibility) in soft_assignment_dict.items():
+        for (name, res) in responsibility.items():
+            if (name not in centroids):
+                centroids[name] = {"sum": res, "centroid": list_mul(point, res)}
+            else:
+                centroids[name]["sum"] += res
+                centroids[name]["centroid"] = list_add(centroids[name]["centroid"], list_mul(point, res))
+
+    return {name: list_mul(c["centroid"], 1/c["sum"]) for (name, c) in centroids.items()}
+
 
 def main(data, init_centroids):
     #######################################################
